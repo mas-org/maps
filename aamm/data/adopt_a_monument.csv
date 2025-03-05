@@ -1,5 +1,5 @@
-the_geom,cartodb_id,material,name,artist_architect,date,location,donors,images,lon,lat
-0101000020E610000022F47D82157B52C070C25297EB694440,1,"Marble; granite basin","Heinrich Heine Fountain (""Die Lorelei"")","Ernest Herter, sculptor",1899,"Bronx. Joyce Kilmer Park, Grand Concourse and 164th Street.","Gift of the German --American Society
+the_geom,cartodb_id,material,name,artist_architect,date,location,donors,<img>,lon,lat
+0101000020E610000022F47D82157B52C070C25297EB694440,1,Marble; granite basin,"Heinrich Heine Fountain (""Die Lorelei"")","Ernest Herter, sculptor",1899,"Bronx. Joyce Kilmer Park, Grand Concourse and 164th Street.","Gift of the German --American Society
 Restored, 1999, with a major grant from the Stephen and Anna-Maria Kellen Foundation and gifts from the North American Heine Society, the City of Düsseldorf, and the Bronx Borough President's Office",https://www.mas.org/images/die-lorelei-fountain-greens.jpg,-73.92318785,40.82750217
 0101000020E6100000816500035C7F52C072A3E9682C5E4440,28,"Bronze statue, granite pedestal",Marquis de Lafayette Monument,Frederic-Auguste Bartholdi,1873,"Union Square, east side between 15th and 16th St.","Restored with a grant from Grand Marnier Foundation
 Conservator: Doug Kwart
@@ -8,7 +8,7 @@ Maintained by MAS",https://www.mas.org/images/marquis-de-lafayette-after.jpg,-73
 Restored, 1989, with a grant from Lincoln Savings Bank
 Conservator: Washington University Technology Associates
 Maintenance by MAS",https://www.mas.org/images/lincoln.jpg,-73.96500349,40.65832466
-0101000020E610000095EF7CB34B7D52C09343593226534440,9,Bronze cast from a 1622 original,Statue of Erasmus,cast of Erasmus statue made in 1622 by Hendrick de Keyser,1930,"Brooklyn. 911 Flatbush Avenue; Erasmus Hall High School (closed in June 2007; now several service schools occupy the campus)","Restored, 1989, with a grant from Erasmus Hall Alumni Association 
+0101000020E610000095EF7CB34B7D52C09343593226534440,9,Bronze cast from a 1622 original,Statue of Erasmus,cast of Erasmus statue made in 1622 by Hendrick de Keyser,1930,Brooklyn. 911 Flatbush Avenue; Erasmus Hall High School (closed in June 2007; now several service schools occupy the campus),"Restored, 1989, with a grant from Erasmus Hall Alumni Association 
 Conservator: ",https://www.mas.org/images/eramus.jpg,-73.95774543,40.64960317
 0101000020E6100000377F7EA5D47A52C0623CF7DC91554440,10,"Limestone, bronze tablet",Zion Park War Memorial,"Charles Cary Rumsey, sculptor
 Henry Beaumont Herts, architect",1925,"Brooklyn. Zion Park, bounded by Legion St., Pitkin and East New York Aves, at Eastern Parkway","Restored, 1990, with a gift from the Mary A.H. Rumsey Foundation 
@@ -112,11 +112,11 @@ Henry Bacon, architect",1917,"Brooklyn. Prospect Park, 9th Street Entrance.","Gi
 Restored, 1991, with a grant from The French American Chamber of Commerce
 Conservator: Steven Tatti
 Maintenance by MAS",https://www.mas.org/images/lafayettememorial.jpg,-73.97653162,40.6644571
-0101000020E61000002565FFFA307652C0411149FCA35F4440,11,"Stainless steel; granite base",Free Form,Jose de Rivera,1964,Queens. Flushing Meadows-Corona Park,"Designed for the 1964 World's Fair
+0101000020E61000002565FFFA307652C0411149FCA35F4440,11,Stainless steel; granite base,Free Form,Jose de Rivera,1964,Queens. Flushing Meadows-Corona Park,"Designed for the 1964 World's Fair
 Restored, 1994, with a grant from NYNEX and the Jose de Rivera estate
 Conservator: Stone Impex
 Maintenance by MAS",https://www.mas.org/images/form.jpg,-73.84673953,40.74719194
-0101000020E610000070D37EEFDF7F52C0BF03C95C955D4440,17,"Bronze bust; limestone pedestal",Alexander Lyman Holley Monument,"John Quincy Adams Ward, sculptor
+0101000020E610000070D37EEFDF7F52C0BF03C95C955D4440,17,Bronze bust; limestone pedestal,Alexander Lyman Holley Monument,"John Quincy Adams Ward, sculptor
 Thomas Hastings, architect",1889,"Washington Square, west of central fountain","Restored, 1999, with grants from the Society of Mechanical Engineers and Save American Treasures
 Conservator: Daedalus (1999 restoration); Gabriel Popian (2009 restoration under NYC Parks capital project))
 Maintained by MAS",https://www.mas.org/images/alexanderlymanholley.jpg,-73.99804294,40.73112068
