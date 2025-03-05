@@ -1,0 +1,240 @@
+
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Kepler.gl embedded map</title>
+
+        <!--Uber Font-->
+        <link rel="stylesheet" href="https://d1a3f4spazzrp4.cloudfront.net/kepler.gl/uber-fonts/4.0.0/superfine.css">
+
+        <!--Kepler css-->
+        <link href="https://unpkg.com/kepler.gl@3.1.0/umd/keplergl.min.css" rel="stylesheet">
+
+        <!--MapBox css-->
+        <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.1/mapbox-gl.css" rel="stylesheet">
+        <link href="https://unpkg.com/maplibre-gl@^3/dist/maplibre-gl.css" rel="stylesheet">
+
+        <!-— facebook open graph tags -->
+        <meta property="og:url" content="http://kepler.gl/" />
+        <meta property="og:title" content="Large-scale WebGL-powered Geospatial Data Visualization Tool" />
+        <meta property="og:description" content="Kepler.gl is a powerful web-based geospatial data analysis tool. Built on a high performance rendering engine and designed for large-scale data sets." />
+        <meta property="og:site_name" content="kepler.gl" />
+        <meta property="og:image" content="https://d1a3f4spazzrp4.cloudfront.net/kepler.gl/kepler.gl-meta-tag.png" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="800" />
+        <meta property="og:image:height" content="800" />
+
+        <!-— twitter card tags -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@openjsf">
+        <meta name="twitter:creator" content="@openjsf">
+        <meta name="twitter:title" content="Large-scale WebGL-powered Geospatial Data Visualization Tool">
+        <meta name="twitter:description" content="Kepler.gl is a powerful web-based geospatial data analysis tool. Built on a high performance rendering engine and designed for large-scale data sets.">
+        <meta name="twitter:image" content="https://d1a3f4spazzrp4.cloudfront.net/kepler.gl/kepler.gl-meta-tag.png" />
+
+        <!-- Load React/Redux -->
+        <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/redux@4.2.1/dist/redux.js" crossorigin></script>
+        <script src="https://unpkg.com/react-redux@8.1.2/dist/react-redux.min.js" crossorigin></script>
+        <script src="https://unpkg.com/styled-components@6.1.8/dist/styled-components.min.js" crossorigin></script>
+
+        <!-- Load Kepler.gl -->
+        <script src="https://unpkg.com/kepler.gl@3.1.0/umd/keplergl.min.js" crossorigin></script>
+
+        <style type="text/css">
+          body {margin: 0; padding: 0; overflow: hidden;}
+        </style>
+
+        <!--MapBox token-->
+        <script>
+          /**
+           * Provide your MapBox Token
+           **/
+          const MAPBOX_TOKEN = 'pk.eyJ1IjoibWFzLW55YyIsImEiOiJjbTd3YmI0bXEwM3kxMmpweWhvNXd4YW85In0.-ZO7_rzEj-RY8aN1TdEOpw';
+          const WARNING_MESSAGE = 'Please Provide a Mapbox Token in order to use Kepler.gl. Edit this file and fill out MAPBOX_TOKEN with your access key';
+        </script>
+
+        <!-- GA: Delete this as you wish, However to pat ourselves on the back, we only track anonymous pageview to understand how many people are using kepler.gl. -->
+        <script>
+          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+          })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+          ga('create', 'UA-64694404-19', {
+            'storage': 'none',
+            'clientId': localStorage.getItem('ga:clientId')
+          });
+          ga(function(tracker) {
+              localStorage.setItem('ga:clientId', tracker.get('clientId'));
+          });
+          ga('set', 'checkProtocolTask', null); // Disable file protocol checking.
+          ga('set', 'checkStorageTask', null); // Disable cookie storage checking.
+          ga('set', 'historyImportTask', null); // Disable history checking (requires reading from cookies).
+          ga('set', 'page', 'keplergl-html');
+          ga('send', 'pageview');
+        </script>
+      </head>
+      <body>
+        <!-- We will put our React component inside this div. -->
+        <div id="app">
+          <!-- Kepler.gl map will be placed here-->
+        </div>
+
+        <!-- Load our React component. -->
+        <script>
+          /* Validate Mapbox Token */
+          if ((MAPBOX_TOKEN || '') === '' || MAPBOX_TOKEN === 'PROVIDE_MAPBOX_TOKEN') {
+            alert(WARNING_MESSAGE);
+          }
+
+          /** STORE **/
+          const reducers = (function createReducers(redux, keplerGl) {
+            return redux.combineReducers({
+              // mount keplerGl reducer
+              keplerGl: keplerGl.keplerGlReducer.initialState({
+                uiState: {
+                  readOnly: true,
+                  currentModal: null
+                }
+              })
+            });
+          }(Redux, KeplerGl));
+
+          const middleWares = (function createMiddlewares(keplerGl) {
+            return keplerGl.enhanceReduxMiddleware([
+              // Add other middlewares here
+            ]);
+          }(KeplerGl));
+
+          const enhancers = (function craeteEnhancers(redux, middles) {
+            return redux.applyMiddleware(...middles);
+          }(Redux, middleWares));
+
+          const store = (function createStore(redux, enhancers) {
+            const initialState = {};
+
+            return redux.createStore(
+              reducers,
+              initialState,
+              redux.compose(enhancers)
+            );
+          }(Redux, enhancers));
+          /** END STORE **/
+
+          /** COMPONENTS **/
+          var KeplerElement = (function makeKeplerElement(react, keplerGl, mapboxToken) {
+            var LogoSvg = function LogoSvg() {
+              return react.createElement(
+                "div",
+                { className: "logo-container", style: {position: 'fixed', zIndex: 10000, padding: '4px'} },
+                  react.createElement(
+                    "svg",
+                    {
+                      className: "kepler_gl__logo",
+                      width: "107px",
+                      height: "21px",
+                      viewBox: "0 0 124 24"
+                    },
+                    react.createElement(
+                      "g",
+                      { transform: "translate(13.500000, 13.500000) rotate(45.000000) translate(-13.500000, -13.500000) translate(4.000000, 4.000000)" },
+                      react.createElement("rect", { x: "0", y: "6", transform: "matrix(2.535181e-06 1 -1 2.535181e-06 18.1107 6.0369)", fill: "#535C6C", width: "12.1", height: "12.1" }),
+                      react.createElement("rect", { x: "6", y: "0", transform: "matrix(2.535182e-06 1 -1 2.535182e-06 18.1107 -6.0369)", fill:"#1FBAD6", width: "12.1", height: "12.1" })
+                    ),
+                    react.createElement(
+                      "g",
+                      {},
+                      react.createElement("path", { fill:"#1FBAD6", d: "M39,8.7h2.2l-2.8,4.2l2.9,5.1H39l-2.4-4.2h-1.3V18h-2V5l2-0.1v7.3h1.3L39,8.7z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M42.4,13.3c0-1.5,0.4-2.7,1.1-3.5s1.8-1.2,3.1-1.2c1.3,0,2.2,0.4,2.8,1.1c0.6,0.7,0.9,1.8,0.9,3.3 c0,0.4,0,0.8,0,1.1h-5.8c0,1.6,0.8,2.4,2.4,2.4c1,0,2-0.2,2.9-0.6l0.2,1.7c-0.4,0.2-0.9,0.4-1.4,0.5s-1.1,0.2-1.7,0.2 c-1.5,0-2.6-0.4-3.3-1.2C42.8,16.1,42.4,14.9,42.4,13.3z M46.6,10.1c-0.7,0-1.2,0.2-1.5,0.5c-0.4,0.4-0.6,0.9-0.6,1.7h4 c0-0.8-0.2-1.4-0.5-1.7S47.2,10.1,46.6,10.1z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M57.1,18.2c-1,0-1.8-0.3-2.3-0.9l0,0l0,1.3v2.5h-2V8.7h1.5l0.3,0.9h0c0.3-0.3,0.7-0.6,1.2-0.7 c0.4-0.2,0.9-0.3,1.4-0.3c1.2,0,2.1,0.4,2.7,1.1c0.6,0.7,0.9,2,0.9,3.7c0,1.6-0.3,2.8-1,3.7C59.2,17.8,58.3,18.2,57.1,18.2z M56.7,10.3c-0.4,0-0.8,0.1-1.1,0.2c-0.3,0.2-0.6,0.4-0.8,0.7v4.3c0.2,0.3,0.4,0.5,0.7,0.7c0.3,0.2,0.7,0.3,1.1,0.3 c0.7,0,1.2-0.2,1.6-0.7c0.4-0.5,0.5-1.3,0.5-2.5c0-0.8-0.1-1.4-0.2-1.8s-0.4-0.7-0.7-0.9C57.6,10.4,57.2,10.3,56.7,10.3z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M63.2,16V5l2-0.1v10.8c0,0.3,0.1,0.5,0.2,0.6c0.1,0.1,0.3,0.2,0.6,0.2c0.3,0,0.6,0,0.9-0.1V18 c-0.4,0.1-1,0.2-1.6,0.2c-0.8,0-1.3-0.2-1.7-0.5S63.2,16.8,63.2,16z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M68.2,13.3c0-1.5,0.4-2.7,1.1-3.5c0.7-0.8,1.8-1.2,3.1-1.2c1.3,0,2.2,0.4,2.8,1.1c0.6,0.7,0.9,1.8,0.9,3.3 c0,0.4,0,0.8,0,1.1h-5.8c0,1.6,0.8,2.4,2.4,2.4c1,0,2-0.2,2.9-0.6l0.2,1.7c-0.4,0.2-0.9,0.4-1.4,0.5s-1.1,0.2-1.7,0.2 c-1.5,0-2.6-0.4-3.3-1.2C68.6,16.1,68.2,14.9,68.2,13.3z M72.4,10.1c-0.7,0-1.2,0.2-1.5,0.5c-0.4,0.4-0.6,0.9-0.6,1.7h4 c0-0.8-0.2-1.4-0.5-1.7S73,10.1,72.4,10.1z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M80.2,8.7l0.1,1.7h0c0.3-0.6,0.7-1.1,1.1-1.4c0.4-0.3,1-0.5,1.6-0.5c0.4,0,0.7,0,1,0.1l-0.1,2 c-0.3-0.1-0.7-0.2-1-0.2c-0.7,0-1.3,0.3-1.7,0.8c-0.4,0.5-0.7,1.2-0.7,2.1V18h-2V8.7H80.2z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M83.8,17c0-0.8,0.4-1.2,1.2-1.2c0.8,0,1.2,0.4,1.2,1.2c0,0.8-0.4,1.1-1.2,1.1C84.2,18.2,83.8,17.8,83.8,17z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M88.5,18.7c0-0.8,0.4-1.4,1.2-1.8c-0.6-0.3-0.9-0.8-0.9-1.5c0-0.7,0.4-1.2,1.1-1.6c-0.3-0.3-0.6-0.6-0.7-0.9 c-0.2-0.4-0.2-0.8-0.2-1.3c0-1,0.3-1.8,0.9-2.3c0.6-0.5,1.6-0.8,2.8-0.8c0.5,0,1,0,1.4,0.1c0.4,0.1,0.8,0.2,1.1,0.4l2.4-0.2v1.5 h-1.5c0.2,0.4,0.2,0.8,0.2,1.3c0,1-0.3,1.7-0.9,2.2s-1.5,0.8-2.7,0.8c-0.7,0-1.2-0.1-1.6-0.2c-0.1,0.1-0.2,0.2-0.3,0.3 c-0.1,0.1-0.1,0.2-0.1,0.4c0,0.2,0.1,0.3,0.2,0.4c0.1,0.1,0.3,0.2,0.6,0.2l2.7,0.2c1,0.1,1.7,0.3,2.2,0.6c0.5,0.3,0.8,0.9,0.8,1.7 c0,0.6-0.2,1.1-0.5,1.5c-0.4,0.4-0.9,0.8-1.5,1c-0.7,0.2-1.5,0.4-2.4,0.4c-1.3,0-2.3-0.2-3-0.6C88.8,20.1,88.5,19.5,88.5,18.7z M95.1,18.4c0-0.3-0.1-0.5-0.3-0.7s-0.6-0.2-1.1-0.3l-2.7-0.3c-0.2,0.1-0.4,0.3-0.5,0.5c-0.1,0.2-0.2,0.4-0.2,0.6 c0,0.4,0.2,0.8,0.5,1c0.4,0.2,1,0.3,1.8,0.3C94.2,19.5,95.1,19.2,95.1,18.4z M94.3,11.5c0-0.6-0.1-1-0.4-1.2 c-0.3-0.2-0.7-0.3-1.3-0.3c-0.7,0-1.1,0.1-1.4,0.3c-0.3,0.2-0.4,0.6-0.4,1.2s0.1,1,0.4,1.2c0.3,0.2,0.7,0.3,1.4,0.3 c0.6,0,1.1-0.1,1.3-0.4S94.3,12,94.3,11.5z" }),
+                      react.createElement("path", { fill:"#1FBAD6", d: "M99.4,16V5l2-0.1v10.8c0,0.3,0.1,0.5,0.2,0.6c0.1,0.1,0.3,0.2,0.6,0.2c0.3,0,0.6,0,0.9-0.1V18 c-0.4,0.1-1,0.2-1.6,0.2c-0.8,0-1.3-0.2-1.7-0.5S99.4,16.8,99.4,16z" })
+                    )
+                  )
+                );
+              };
+
+            return function App() {
+              var rootElm = react.useRef(null);
+              var _useState = react.useState({
+                width: window.innerWidth,
+                height: window.innerHeight
+              });
+              var windowDimension = _useState[0];
+              var setDimension = _useState[1];
+              react.useEffect(function sideEffect(){
+                function handleResize() {
+                  setDimension({width: window.innerWidth, height: window.innerHeight});
+                };
+                window.addEventListener('resize', handleResize);
+                return function() {window.removeEventListener('resize', handleResize);};
+              }, []);
+              return react.createElement(
+                'div',
+                {style: {position: 'absolute', left: 0, width: '100vw', height: '100vh'}},
+                LogoSvg(),
+                react.createElement(keplerGl.KeplerGl, {
+                  mapboxApiAccessToken: mapboxToken,
+                  id: "map",
+                  width: windowDimension.width,
+                  height: windowDimension.height
+                })
+              )
+            }
+          }(React, KeplerGl, MAPBOX_TOKEN));
+
+          const app = (function createReactReduxProvider(react, reactRedux, KeplerElement) {
+            return react.createElement(
+              reactRedux.Provider,
+              {store},
+              react.createElement(KeplerElement, null)
+            )
+          }(React, ReactRedux, KeplerElement));
+          /** END COMPONENTS **/
+
+          /** Render **/
+          (function render(react, reactDOM, app) {
+            const container = document.getElementById('app');
+            const root = reactDOM.createRoot(container);
+            root.render(app);
+          }(React, ReactDOM, app));
+        </script>
+        <!-- The next script will show how to interact directly with Kepler map store -->
+        <script>
+          /**
+           * Customize map.
+           * In the following section you can use the store object to dispatch Kepler.gl actions
+           * to add new data and customize behavior
+           */
+          (function customize(keplerGl, store) {
+            const datasets = [{"version":"v1","data":{"id":"-lbn0gk","label":"adopt_a_monument.csv","color":[143,47,191],"allData":[["0101000020E610000022F47D82157B52C070C25297EB694440","monument","Marble; granite basin","Heinrich Heine Fountain (\"Die Lorelei\")","Ernest Herter, sculptor","1899","Bronx. Joyce Kilmer Park, Grand Concourse and 164th Street.","Gift of the German --American Society\nRestored, 1999, with a major grant from the Stephen and Anna-Maria Kellen Foundation and gifts from the North American Heine Society, the City of Düsseldorf, and the Bronx Borough President's Office","https://www.mas.org/images/die-lorelei-fountain-greens.jpg",-73.92318785,40.82750217],["0101000020E6100000272D019DAE7452C0119790CD5D6D4440","monument","Bronze statue, granite pedestal","World War I Bronx Victory Memorial","Jerome Connor, sculptor; Arthur George Waldreaon, architect","1925","Bronx. Mosholu Parkway and Marion Avenue.","Gift of the Bronx Victory Monument Association\nRestored, 1988, with a grant from The Grand Marnier Foundation\nConservator: Linda Merk\nMaintenance by MAS","https://www.mas.org/images/bronx-ww-one-monument.jpg",-73.82315755,40.85442514],["0101000020E6100000DB84FF9DC27D52C0D76C82FB43544440","monument","Bronze statue, granite pedestal","Abraham Lincoln Monument","Henry Kirke Brown, sculptor","1869","Brooklyn. Prospect Park, concert Grove.","Gift of the War Fund Committee of Kings County\nRestored, 1989, with a grant from Lincoln Savings Bank\nConservator: Washington University Technology Associates\nMaintenance by MAS","https://www.mas.org/images/lincoln.jpg",-73.96500349,40.65832466],["0101000020E610000094BD848E067E52C07804FDA62C564440","monument","Bronze statue, granite pedestal","General Henry Warner Slocum Monument","Frederick William MacMonnies","1905","Brooklyn. Plaza Street East and Grand Army Plaza","Purchased by the City\nRestored, 1989, with a grant from The Commonwealth Fund\nConservators: Constance Moorland Studio. Conserved again, August 2014, NYC Parks Dept Monuments Crew; paid for by MAS and supervised by MAS and Parks. \nMaintenance by MAS","https://www.mas.org/images/generalhenryslocum.jpg",-73.96915019,40.67323768],["0101000020E61000009AE97F355E7F52C0343F0644EB584440","monument","Bronze statue, granite pedestal","Henry Ward Beecher Monument","John Quincy Adams Ward, sculptor\nRichard Morris Hunt, architect","1891","Brooklyn. Cadman Plaza near Johnson Street","Gift of the Beecher Statue Fund\nRestored, 1988, with a grants from Broadway United Church of Christ and Plymouth church of the Pilgrams\nConservators:  Dennis & Craine\nMaintenance by MAS\n","https://www.mas.org/images/henry-ward-beecher-monument-restored.jpg",-73.99012506,40.69467974],["0101000020E61000003CDA7A7E7F7E52C0290C25EE0C554440","monument","Bronze relief, granite exedra","Marquis De Lafayette Memorial","Daniel Chester French, sculptor\nHenry Bacon, architect","1917","Brooklyn. Prospect Park, 9th Street Entrance.","Gift of Henry Harteau to the City of Brooklyn\nRestored, 1991, with a grant from The French American Chamber of Commerce\nConservator: Steven Tatti\nMaintenance by MAS","https://www.mas.org/images/lafayettememorial.jpg",-73.97653162,40.6644571],["0101000020E610000095EF7CB34B7D52C09343593226534440","monument","Bronze cast from a 1622 original","Statue of Erasmus","cast of Erasmus statue made in 1622 by Hendrick de Keyser","1930","Brooklyn. 911 Flatbush Avenue; Erasmus Hall High School (closed in June 2007; now several service schools occupy the campus)","Restored, 1989, with a grant from Erasmus Hall Alumni Association \nConservator: ","https://www.mas.org/images/eramus.jpg",-73.95774543,40.64960317],["0101000020E6100000377F7EA5D47A52C0623CF7DC91554440","monument","Limestone, bronze tablet","Zion Park War Memorial","Charles Cary Rumsey, sculptor\nHenry Beaumont Herts, architect","1925","Brooklyn. Zion Park, bounded by Legion St., Pitkin and East New York Aves, at Eastern Parkway","Restored, 1990, with a gift from the Mary A.H. Rumsey Foundation \nConservator:\nMaintenance by MAS","https://www.mas.org/images/zionparkwarmemorial.jpg",-73.91922891,40.66851389],["0101000020E61000002565FFFA307652C0411149FCA35F4440","monument","Stainless steel; granite base","Free Form","Jose de Rivera","1964","Queens. Flushing Meadows-Corona Park","Designed for the 1964 World's Fair\nRestored, 1994, with a grant from NYNEX and the Jose de Rivera estate\nConservator: Stone Impex\nMaintenance by MAS","https://www.mas.org/images/form.jpg",-73.84673953,40.74719194],["0101000020E6100000F56AFC99EC7552C088CD3251A55F4440","monument","Bronze statue, granite pedestal, gilded stars","Rocket Thrower","Donald DeLue","1964","Queens. Flushing Meadows-Corona Park","Designed for the 1964 World's Fair\nRestored in 2013, with a grant from George Trescher Monument Fund, Mr. and Mrs. Marvin C. Schwartz, The New York Community Trust, Joseph Smagacz and contributions from other individuals ","https://www.mas.org/images/rocketthrower.jpg",-73.84256601,40.74723258],["0101000020E61000009B58013AE38452C06801C1B992514440","monument","Bronze statue, marble pedestal","Major Clarence T. Barrett Memorial","Sherry Edmundson Fry","1915","Staten Island. Intersection of Stuyvesant Place and Borough Hall","Gift to the city by Clarence Barrett's widow, Julia Olivia Harden\nRestore, 1989, with a grant from the Lynne Robbins Steinman Foundation\nConservator: Linda Merk and the NYC Parks Dept\nMaintenance by MAS","https://www.mas.org/images/clarencebarrett.jpg",-74.07636881,40.63729021],["0101000020E610000090A782DD728652C0B1608F4778524440","monument","Zinc group, sandstone base","Neptune Fountain","J.W. Fiske & Company, fabricator","1892","Staten Island. Snug Harbor Cultural Center, East Lawn","Restored, 1994, and refabricated in bronze with a catalyst grant from The Paul and Klara Porzelt Foundation and grants from the environmental Quality Bond Act and Per Cent for Art","https://www.mas.org/images/neptunefountain.jpg",-74.10076082,40.64429564],["0101000020E610000033C3043D6D7F52C0BC9F2A116E5D4440","monument","Cor-ten steel, painted black","Alamo","Tony Rosenthal","1966-1967","Astor Place, intersection of Lafayette St. & 8th St.","Restored, 1988, with a grant from Don Neale and in kind assistance from Con Edison\nConserved by Lippincott Foundry \nMaintained by Cooper Union ","https://www.mas.org/images/alamo.jpg",-73.99104238,40.72992148],["0101000020E610000070D37EEFDF7F52C0BF03C95C955D4440","monument","Bronze bust; limestone pedestal","Alexander Lyman Holley Monument","John Quincy Adams Ward, sculptor\nThomas Hastings, architect","1889","Washington Square, west of central fountain","Restored, 1999, with grants from the Society of Mechanical Engineers and Save American Treasures\nConservator: Daedalus (1999 restoration); Gabriel Popian (2009 restoration under NYC Parks capital project))\nMaintained by MAS","https://www.mas.org/images/alexanderlymanholley.jpg",-73.99804294,40.73112068],["0101000020E6100000CDF77C62D77E52C07872B81C50624440","monument","Granite, carrera marble, bronze bas-reliefs & ornamentation","Columbus Monument","Gaetano Russo","1892","Columbus Circle, Eighth Ave. & 59th St.","Restored, 1991, with grants from the Columbus Citizens Foundation and \nConservators: Building Conservation Associates and Lithos\nMaintained by Central Park Conservancy","https://www.mas.org/images/columbusfinal.jpg",-73.98189604,40.76806983],["0101000020E6100000BD33FBB84D7D52C041A15C2230614440","monument","Unpainted Aluminum sculpture on painted steel building skeleton","East River Roundabout","Alice Aycock","1995","60th and York Ave, above the East River","Fan element cleaned by Port Morris Marble and Metal in 2007; to be conserved completely by American Stripping, summer 2014\nMaintenance responsibility by MAS","https://www.mas.org/images/eastriverroundabout.jpg",-73.95786881,40.75928144],["0101000020E6100000E14F01EE817D52C033D8BBDC33614440","monument","Glass mosaic, tile, granite steele","Evangeline Blashfield Fountain","Edwin Howland Blashfield, sculptor\nEli Harvey, sculptor\nCharles Stoughton, architect","1919","59th St. between York & First Ave.","Restored, 2003, with a gift from Florence D'Urso\nConservators: Wilson Conservation\nMaintained by MAS","https://www.mas.org/images/blashfieldfinal.jpg",-73.96105528,40.75939521],["0101000020E6100000CA21FB83357F52C04973F949145F4440","monument","Bronze statue, black granite pedestal & exedra","Admiral David Glasgow Farragut Monument","Augustus Saint-Gaudens, sculptor\nStanford White, architect","1880","Madison Square, north end near 26th St.","Restored, 2002, with a grant from the Paul and Klara Porzelt Foundation\nConservators: Wilson Conservation\nMaintained by MAS","https://www.mas.org/images/aftertreatmentfull.jpg",-73.98764133,40.74280667],["0101000020E610000069FBFC9C677F52C05AD2B438215E4440","monument","Bronze statue, granite pedestal","George Washington Monument","Henry Kirke Brown, sculptor\nJohn Quincy Adams Ward, assistant\nRichard Upjohn, arch.","1856","Union Square, south end at 14th St.","Restored, 1989, with a grant from the Glick Organization\nConservator: Steven Tatti","https://www.mas.org/images/georgewashingtonfinal.jpg",-73.99069905,40.73538884],["0101000020E6100000F63BFB67D97E52C0642B81F7025D4440","monument","zinc, cast in bronze","Temperance Fountain (\"Hebe\" Fountain)","J.L. Mott Iron Works fabricated the fountain in zinc in 1988 based on an original marble statue by Albert Bertel Thorvaldsen, 1816","1988","Tompkins Square, near Avenue A south of the Ninth St. transverse","Restored and cast in bronze, 1990, a collaboration with the NYC Parks and Recreation Dept.\nConservator: Pietro Dura and sculptor Malcolm Frazier","https://www.mas.org/images/temperancefountain.jpg",-73.98201942,40.72665304],["0101000020E610000009DFFB1B347F52C0D558882F0F604440","monument","Bronze group, granite niche and pedestal","James Gordon Bennett Monument (\"The Bellringers\")","Jean-Antonin Carles, sculptor\nAymar Embury II, architect","1939-40","Herald Square, intersection of Ave. of the Americas and Broadway between 34th and 35th Sts. ","Restored, 1989, with grants from Master Card and the International Tribune \nRestored , 2007, with a grant from George Trescher Monument Fund and funds from 34th Street Partnership\nConservators: John Scott (1989); Wilson Conservation (bronze); Integrated Conservation Assoc.(stone) (2007)\nClock Maintenance by Marvin Schneider, NYC ClockMaster\nConserved again: Summer 201\nSculpture Maintained by MAS","https://www.mas.org/images/bellringers-after.png",-73.9875555,40.75046343],["0101000020E61000001D1B05B1817E52C0134D1C50A1654440","monument","Bronze statue, granite pedestal","Joan of Arc Monument","Anna Hyatt Huntington, sculptor\nJohn V. Van Pelt, architect ","1915","Riverside Drive and 93rd St.","Restored,  with a grant from Grand Marnier\nConservator: Steven Tatti\nMaintained by MAS","https://www.mas.org/images/huntington-joan-of-arc.jpg",-73.97666574,40.79398538],["0101000020E61000002CF77E7ADE7D52C0814D29F1B1634440","monument","Bronze group, granite pedestal","King Jagiello Monument","Stanislaw K. Ostrowski, sculptor\nAymar Embury II, architect","1939","Central Park, north of the 79th St. Transverse Rd, west of East Drive","Restored with a grant from the American Conservation Association in 1987\nRestored in through CPC\nMaintained by CPC","https://www.mas.org/images/kingjagiello.jpg",-73.96670401,40.77886786],["0101000020E6100000D6C103FB168152C02CC6D01C1F5A4440","monument","Stainless steel, granite base, mosaic","Korean War Veterans Memorial","Mac Adams","1991","Battery Park, north of Castle Clinton","Maintenance responsibility by MAS","https://www.mas.org/images/koreanwarmemorial.jpg",-74.01702762,40.70407448],["0101000020E6100000816500035C7F52C072A3E9682C5E4440","monument","Bronze statue, granite pedestal","Marquis de Lafayette Monument","Frederic-Auguste Bartholdi","1873","Union Square, east side between 15th and 16th St.","Restored with a grant from Grand Marnier Foundation\nConservator: Doug Kwart\nMaintained by MAS","https://www.mas.org/images/marquis-de-lafayette-after.jpg",-73.98999095,40.73573028],["0101000020E6100000282B02739F8052C090F38278F2594440","monument","Glass blocks & granite","New York Vietnam Veterans Memorial","Peter Wormser & William Fellows, architects","1984-1985","55 Water St. between Coenties Slip & Broad St.","Custodian of maintenance funds: MAS","https://www.mas.org/images/vietnammemorial.jpg",-74.00973201,40.70271212],["0101000020E61000002DFB0151687F52C0DF6CB57F4C5D4440","monument","Bronze statue, marble & granite pedestal & canopy","Peter Cooper Monument","Augustus Saint-Gaudens, sculptor\nStanford White, architect","1894","Cooper Square in front of Cooper Union","Restored with a grant from Cooper Union\nConsevator: Dennis & Craine\nMaintained by Cooper Union","https://www.mas.org/images/petercooper.jpg",-73.99074197,40.72889706],["0101000020E6100000DABFFC5FFF7E52C0540D2D78F25D4440","monument","Bronze statue, granite pedestal","Peter Stuyvesant Monument","Gertrude Vanderbilt Whitney, sculptor","1936","Stuyvesant Square, between 15th and 16th Streets, West of 2nd Ave.","Restored with a gift from Mrs. Shelby White\nConservator: Linda Merk \nMaintained by MAS","https://www.mas.org/images/whitney-peter-stuyvesant.jpg",-73.98433685,40.73396208],["0101000020E6100000EA577C3BF07D52C04FE83744C3624440","monument","Bronze statues & busts, granite exedra & pedestal, mosaic tile","Richard Morris Hunt Memorial","Daniel Chester French, sculptor\nBruce Price, architect","1896-1901","Fifth Ave. between 70th and 71st St.","Restored with a gift from the Paul & Klara Porzelt Foundation\nConservators: CPC crew, bronze & granite; Steve Miotto, mosaic tile; Modern Art Foundry, replication\nMaintained by CPC","https://www.mas.org/images/richardmorrishunt.jpg",-73.96778762,40.77158406],["0101000020E61000005C29FC00417E52C054658CCD96624440","monument","Bronze statue, granite pedestal","Robert Burns Monument","Sir John Steell","1880","Central Park Mall","Restored with a grant from The Saint Andrew's Society of the State of New York\nConservator: Daedalus\nMaintained by CPC","https://www.mas.org/images/robert-burns-full-statue.png",-73.97271752,40.77022714],["0101000020E610000045847F11747E52C00A2C802903624440","monument","Bronze statue, granite pedestal","Simon Bolivar Monument","Sally Jane Farnbam","1919","Central Park South & Avenue of the Americas","Restored with a grant from CVG International America\nConservator: Steven Tatti\nMaintained by CPC","https://www.mas.org/images/farnham-simon-bolivar.jpg",-73.97583425,40.7657215],["0101000020E6100000C3E504AFCE7E52C05A1F83D30A5D4440","monument","Marble","Slocum Memorial Fountain","Bruno Louis Zimm","1906","Tompkins Square, north of 9th St. between the wadding pool & the loggia","Restored with a gift from The Slocum Fountain Restoration led by Frank Duffy & NYC Parks Capital Project\nConservator: Conservation and Sculpture, Co.\nMaintained by MAS","https://www.mas.org/images/slocum.jpg",-73.98136497,40.72689289],["0101000020E610000092C8041DE97D52C08E5EAA255F634440","monument","Bronze statue on natural rock outcropping","Still Hunt","Edward Kennneys","1881-1883","Central Park overlooking the East Drive at 76th St.","Restored with a grant from William Beinecke, Prospect Park Foundation \nConservator: Joel Meisner\nMaintained by CPC","https://www.mas.org/images/stillhunt.jpg",-73.96735311,40.77634116],["0101000020E61000005117844D387E52C01AEA663593624440","monument","Bronze statue, granite pedestal","Walter Scott Monument","Sir John Steell","1871","Central Park Mall","Restored with a gift from The Saint Andrews Society of the State of New York\nConservator: Daedalus \nMaintained by CPC","https://www.mas.org/images/sirwalterscott.jpg",-73.97218645,40.77011745],["0101000020E6100000DEA8FC08CF7E52C062AA2E1A915E4440","monument","Granite obelisk, bronze bas-relief","General William Jenkins Worth Monument","James Goodwin Batterson","1854-1857","Broadway and 24th Street","Restored with a grants from Commander Thomas Woodruff and the Paul & Klara Porzelt Foundation\nConservator: Allan Cox\nMaintained by MAS","https://www.mas.org/images/worthmonument.jpg",-73.98138642,40.73880317],["0101000020E61000005BF081A1777252C053765D6C185B4440","monument","Bronze statue, granite pedestal","Soldiers and Sailors Monument","Frederick Wellington Rucksthul","1896","Queens. Hillside Avenue and 173rd St.","Purchased through public subscription\nRestored, 1998, with a grant from the Gilder Foundation and monies raised by MAS through a campaign in The Livable City\nConservator: John Scott\nMaintenance by MAS","https://www.mas.org/images/soldiersandsailors.jpg",-73.78855169,40.71168284],["0101000020E61000007BA2EBC20F7952C0B51B7DCC07724440","monument","Limestone, granite, and marble","Grand Central Stones","New York Central Railroad","1905","Van Cortlandt Park, along Putnam Greenway","Restored through a grant from the Paul and Klara Porzelt Foundation\nConservator: Steve Tatti \nIn collaboration with Friends of Van Cortlandt Park and MAS","https://www.mas.org/images/post-treatment.png",-73.891587,40.890863],["0101000020E6100000824D84AA248052C0AE7F5BA0725B4440","monument","Bronze frame and marble bas relief","Rebecca Salome Foster Monument","Karl Bitter","2019","60 Centre Street","Restored, 2019,  through MAS’s Adopt-A-Monument program","https://www.mas.org/images/rebecca-salome-foster.jpg",-74.00223792,40.71443562]],"fields":[{"name":"the_geom","type":"geojson","format":"","analyzerType":"GEOMETRY"},{"name":"type","type":"string","format":"","analyzerType":"STRING"},{"name":"material","type":"string","format":"","analyzerType":"STRING"},{"name":"name","type":"string","format":"","analyzerType":"STRING"},{"name":"artist_architect","type":"string","format":"","analyzerType":"STRING"},{"name":"date","type":"string","format":"","analyzerType":"STRING"},{"name":"location","type":"string","format":"","analyzerType":"STRING"},{"name":"donors","type":"string","format":"","analyzerType":"STRING"},{"name":"<img>","type":"string","format":"","analyzerType":"STRING"},{"name":"lon","type":"real","format":"","analyzerType":"FLOAT"},{"name":"lat","type":"real","format":"","analyzerType":"FLOAT"}],"type":"","metadata":{"id":"-lbn0gk","format":"row","label":"adopt_a_monument.csv"},"disableDataOperation":false}}];
+            const config = {"version":"v1","config":{"visState":{"filters":[],"layers":[{"id":"px5az6","type":"point","config":{"dataId":"-lbn0gk","columnMode":"points","label":"point","color":[77,158,238],"highlightColor":[252,242,26,255],"columns":{"lat":"lat","lng":"lon"},"isVisible":true,"visConfig":{"radius":15,"fixedRadius":false,"opacity":0.9,"outline":true,"thickness":1,"strokeColor":[255,255,255],"colorRange":{"name":"Global Warming","type":"sequential","category":"Uber","colors":["#4C0035","#880030","#B72F15","#D6610A","#EF9100","#FFC300"]},"strokeColorRange":{"name":"Global Warming","type":"sequential","category":"Uber","colors":["#4C0035","#880030","#B72F15","#D6610A","#EF9100","#FFC300"]},"radiusRange":[0,50],"filled":true,"billboard":false,"allowHover":true,"showNeighborOnHover":false,"showHighlightColor":true},"hidden":false,"textLabel":[]},"visualChannels":{"colorField":null,"colorScale":"quantile","strokeColorField":null,"strokeColorScale":"quantile","sizeField":null,"sizeScale":"linear"}},{"id":"csuh3f8","type":"geojson","config":{"dataId":"-lbn0gk","columnMode":"geojson","label":"adopt_a_monument","color":[130,154,227],"highlightColor":[252,242,26,255],"columns":{"geojson":"the_geom"},"isVisible":true,"visConfig":{"opacity":0.8,"strokeOpacity":0.8,"thickness":0.5,"strokeColor":null,"colorRange":{"name":"Global Warming","type":"sequential","category":"Uber","colors":["#4C0035","#880030","#B72F15","#D6610A","#EF9100","#FFC300"]},"strokeColorRange":{"name":"Global Warming","type":"sequential","category":"Uber","colors":["#4C0035","#880030","#B72F15","#D6610A","#EF9100","#FFC300"]},"radius":10,"sizeRange":[0,10],"radiusRange":[0,50],"heightRange":[0,500],"elevationScale":5,"stroked":true,"filled":false,"enable3d":false,"wireframe":false,"fixedHeight":false},"hidden":false,"textLabel":[{"field":null,"color":[255,255,255],"size":18,"offset":[0,0],"anchor":"start","alignment":"center","outlineWidth":0,"outlineColor":[255,0,0,255],"background":false,"backgroundColor":[0,0,200,255]}]},"visualChannels":{"colorField":null,"colorScale":"quantile","strokeColorField":null,"strokeColorScale":"quantile","sizeField":null,"sizeScale":"linear","heightField":null,"heightScale":"linear","radiusField":null,"radiusScale":"linear"}}],"effects":[],"interactionConfig":{"tooltip":{"fieldsToShow":{"-lbn0gk":[{"name":"<img>","id":"<img>","displayName":"<img>","format":"","fieldIdx":8,"type":"string","analyzerType":"STRING"},{"name":"name","id":"name","displayName":"name","format":"","fieldIdx":3,"type":"string","analyzerType":"STRING"},{"name":"artist_architect","id":"artist_architect","displayName":"artist_architect","format":"","fieldIdx":4,"type":"string","analyzerType":"STRING"},{"name":"location","format":null}]},"compareMode":false,"compareType":"absolute","enabled":true},"brush":{"size":0.5,"enabled":false},"geocoder":{"enabled":false},"coordinate":{"enabled":false}},"layerBlending":"normal","overlayBlending":"normal","splitMaps":[],"animationConfig":{"currentTime":null,"speed":1},"editor":{"features":[],"visible":true}},"mapState":{"bearing":0,"dragRotate":false,"latitude":40.75025262879107,"longitude":-73.96643332279865,"pitch":0,"zoom":10.548058916916952,"isSplit":false,"isViewportSynced":true,"isZoomLocked":false,"splitMapViewports":[]},"mapStyle":{"styleType":"positron","topLayerGroups":{},"visibleLayerGroups":{"label":true,"road":true,"border":false,"building":true,"water":true,"land":true,"3d building":false},"threeDBuildingColor":[232.7874787737094,232.7874787737094,230.92517894351974],"backgroundColor":[0,0,0],"mapStyles":{}},"uiState":{"mapControls":{"mapLegend":{"active":true}}}}};
+
+            const loadedData = keplerGl.KeplerGlSchema.load(
+              datasets,
+              config
+            );
+
+            // For some reason Kepler overwrites the config without extra wait time
+            window.setTimeout(() => {
+              store.dispatch(
+                keplerGl.addDataToMap({
+                  datasets: loadedData.datasets,
+                  config: loadedData.config,
+                  options: {
+                    centerMap: false,
+                  },
+                })
+              );
+            }, 500);
+          }(KeplerGl, store))
+        </script>
+      </body>
+    </html>
+  
